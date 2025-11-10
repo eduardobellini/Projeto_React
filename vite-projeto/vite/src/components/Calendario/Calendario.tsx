@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './Calendario.css'
 
 
@@ -22,3 +22,9 @@ function getDaysArray(year: number, month: number) {
   }
   return days;
 }
+
+export const Calendario: React.FC = () => {
+  const today = new Date();
+  const [month, setMonth] = useState(today.getMonth());
+  const [year, setYear] = useState(today.getFullYear());
+  const days = getDaysArray(year, month);
