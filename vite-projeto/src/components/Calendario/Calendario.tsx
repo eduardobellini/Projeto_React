@@ -1,24 +1,36 @@
-import React, { useState } from 'react';
-import './Calendario.css';
+import React, { useEffect, useState } from "react";
+import "./Calendario.css";
 
-const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-function getDaysInMonth(month: number, year: number): number[] {
-  const numDays = new Date(year, month + 1, 0).getDate();
-  return Array.from({ length: numDays }, (_, i) => i + 1);
-}
+const diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-function getFirstDayOfMonth(month: number, year: number): number {
-  return new Date(year, month, 1).getDay();
-}
+const obterDiasDoMes = (mes: number, ano: number): number[] => {
+  const totalDias = new Date(ano, mes + 1, 0).getDate();
+  return Array.from({ length: totalDias }, (_, i) => i + 1);
+};
+const obterPrimeiroDiaDoMes = (mes: number, ano: number): number => new Date(ano, mes, 1).getDay();
+const obterIdPokemon = (dia: number, mes: number, ano: number) => (dia + (mes + 1) * 31 + ano) % 898 + 1;
+const ehAbort = (e: unknown) => !!(e && typeof e === "object" && "name" in e && (e as { name?: string }).name === "AbortError");
+const mesAnoFormatado = (mes: number, ano: number) => {
+  const nomeMes = new Date(ano, mes).toLocaleDateString("pt-BR", { month: "long" });
+  return `${nomeMes.charAt(0).toUpperCase()}${nomeMes.slice(1)} ${ano}`;
+};
 
 const Calendario: React.FC = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
-  const days = getDaysInMonth(currentMonth, currentYear);
-  const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+  const [selectedDay, setSelectedDay] = useState<number | null>(
+    today.getDate()
+  );
+  const [pokemon, setPokemon] = useState<{
+    name: string;
+    sprite: string | null;
+  } | null>(null);
+  const [loadingPokemon, setLoadingPokemon] = useState(false);
+  const [pokemonError, setPokemonError] = useState<string | null>(null);
+  const dias = obterDiasDoMes(currentMonth, currentYear);
+  const primeiroDia = obterPrimeiroDiaDoMes(currentMonth, currentYear);
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -27,7 +39,7 @@ const Calendario: React.FC = () => {
     } else {
       setCurrentMonth(currentMonth - 1);
     }
-    setSelectedDay(null); 
+    setSelectedDay(null);
   };
 
   const handleNextMonth = () => {
@@ -37,37 +49,67 @@ const Calendario: React.FC = () => {
     } else {
       setCurrentMonth(currentMonth + 1);
     }
-    setSelectedDay(null); 
+    setSelectedDay(null);
   };
 
   const handleSelectDay = (day: number) => {
     setSelectedDay(day);
   };
 
+  useEffect(() => {
+    if (selectedDay == null) return;
+    const controller = new AbortController();
+    const fetchPokemon = async () => {
+      try {
+        setLoadingPokemon(true);
+        setPokemonError(null);
+        const id = obterIdPokemon(selectedDay, currentMonth, currentYear);
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setPokemon({
+          name: data.name,
+          sprite: data?.sprites?.front_default ?? null,
+        });
+      } catch (e: unknown) {
+        if (ehAbort(e)) {
+          return;
+        }
+        setPokemonError("Falha ao carregar Pokémon");
+        setPokemon(null);
+      } finally {
+        setLoadingPokemon(false);
+      }
+    };
+    fetchPokemon();
+    return () => controller.abort();
+  }, [selectedDay, currentMonth, currentYear]);
+
   return (
-    <div className="calendar-container">
-      <div className="calendar-header">
-        <button className="calendar-nav" onClick={handlePrevMonth}>{'<'}</button>
-        <span className="calendar-title">
-          {new Date(currentYear, currentMonth)
-            .toLocaleDateString('pt-BR', { month: 'long' })
-            .charAt(0).toUpperCase() +
-            new Date(currentYear, currentMonth)
-              .toLocaleDateString('pt-BR', { month: 'long' }).slice(1)
-          } {currentYear}
-        </span>
-        <button className="calendar-nav" onClick={handleNextMonth}>{'>'}</button>
+    <div className="calendario-container">
+      <div className="calendario-header">
+        <button className="calendario-nav" onClick={handlePrevMonth}>
+          {"<"}
+        </button>
+        <span className="calendario-titulo">{mesAnoFormatado(currentMonth, currentYear)}</span>
+        <button className="calendario-nav" onClick={handleNextMonth}>
+          {">"}
+        </button>
       </div>
-      <div className="calendar-weekdays">
-        {weekDays.map(day => (
-          <div key={day} className="calendar-weekday">{day}</div>
+      <div className="calendario-dias-semana">
+        {diasDaSemana.map((dia) => (
+          <div key={dia} className="calendario-dia-semana">
+            {dia}
+          </div>
         ))}
       </div>
-      <div className="calendar-days">
-        {Array.from({ length: firstDay }).map((_, i) => (
-          <div key={`empty-${i}`} className="calendar-day calendar-empty" />
+      <div className="calendario-dias">
+        {Array.from({ length: primeiroDia }).map((_, i) => (
+          <div key={`vazio-${i}`} className="calendario-dia calendario-vazio" />
         ))}
-        {days.map(day => {
+        {dias.map((day) => {
           const isToday =
             day === today.getDate() &&
             currentMonth === today.getMonth() &&
@@ -77,7 +119,9 @@ const Calendario: React.FC = () => {
           return (
             <div
               key={day}
-              className={`calendar-day${isToday ? ' calendar-today' : ''}${isSelected ? ' calendar-selected' : ''}`}
+              className={`calendario-dia${isToday ? " calendario-hoje" : ""}${
+                isSelected ? " calendario-selecionado" : ""
+              }`}
               onClick={() => handleSelectDay(day)}
             >
               {day}
@@ -85,9 +129,33 @@ const Calendario: React.FC = () => {
           );
         })}
       </div>
+      <div className="pokemon-painel">
+        {loadingPokemon && (
+          <span className="pokemon-carregando">Carregando Pokémon...</span>
+        )}
+        {!loadingPokemon && pokemonError && (
+          <span className="pokemon-erro">{pokemonError}</span>
+        )}
+        {!loadingPokemon && !pokemonError && pokemon && (
+          <div className="pokemon-conteudo">
+            {pokemon.sprite ? (
+              <img
+                className="pokemon-img"
+                src={pokemon.sprite}
+                alt={pokemon.name}
+              />
+            ) : (
+              <div className="pokemon-sem-imagem">Sem imagem</div>
+            )}
+            <div className="pokemon-informacoes">
+              <div className="pokemon-nome">{pokemon.name}</div>
+            </div>
+          </div>
+        )}
+        {!loadingPokemon && !pokemonError && !pokemon && null}
+      </div>
     </div>
   );
 };
-
 
 export default Calendario;
