@@ -1,5 +1,7 @@
+
 import './App.css'
-import { Calendario } from './components/Calendario/Calendario'
+import Calendario from './components/Calendario/Calendario'
+
 
 function App() {
 
