@@ -29,6 +29,7 @@ export const Calendario: React.FC = () => {
   const [year, setYear] = useState(today.getFullYear());
   const days = getDaysArray(year, month);
 
+  // Renderizacao do calendario
    return (
     <div className="calendar-container">
       <h3>Hoje</h3>
