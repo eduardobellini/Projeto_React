@@ -16,7 +16,6 @@ export default function Home() {
       const raw = localStorage.getItem('habitosPorData')
       if (!raw) return {}
       const parsed = JSON.parse(raw)
-      // migrate old format (array of strings) to new format
       const migrated: Record<string, Habito[]> = {}
       for (const k of Object.keys(parsed)) {
         const val = parsed[k]
