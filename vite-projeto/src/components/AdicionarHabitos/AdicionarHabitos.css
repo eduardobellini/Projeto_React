@@ -1,18 +1,17 @@
 .container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 40px; 
+  width: 100%;
 }
 
 .card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  width: 280px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
   text-align: center;
   transition: transform 0.2s ease;
+  margin: 0 auto;
 }
 
 .card:hover {
@@ -20,7 +19,7 @@
 }
 
 .card h2 {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #222;
 }
 
