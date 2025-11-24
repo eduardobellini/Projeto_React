@@ -1,4 +1,5 @@
 import React from 'react'
+import './home.css'
 import Calendario from "./Calendario/Calendario"
 import MeusHabitos from "./MeusHabitos/MeusHabitos"
 import AdicionarHabitos from  "./AdicionarHabitos/AdicionarHabitos"
@@ -57,17 +58,23 @@ export default function Home() {
   const chaveParaRender = chaveData(diaSelecionado, mesAtual, anoAtual)
 
   return (
-    <>
-      <Calendario
-        mesAtual={mesAtual}
-        anoAtual={anoAtual}
-        diaSelecionado={diaSelecionado}
-        aoVoltarMes={aoVoltarMes}
-        aoAvancarMes={aoAvancarMes}
-        aoSelecionarDia={aoSelecionarDia}
-      />
-      <MeusHabitos habitos={habitosPorData[chaveParaRender] ?? []} />
-      <AdicionarHabitos aoAdicionar={aoAdicionarHabito} />
-    </>
+    <div className="home-container">
+      <div className="home-grid">
+        <div className="home-left">
+          <Calendario
+            mesAtual={mesAtual}
+            anoAtual={anoAtual}
+            diaSelecionado={diaSelecionado}
+            aoVoltarMes={aoVoltarMes}
+            aoAvancarMes={aoAvancarMes}
+            aoSelecionarDia={aoSelecionarDia}
+          />
+        </div>
+        <div className="home-right">
+          <MeusHabitos habitos={habitosPorData[chaveParaRender] ?? []} />
+          <AdicionarHabitos aoAdicionar={aoAdicionarHabito} />
+        </div>
+      </div>
+    </div>
   )
 }

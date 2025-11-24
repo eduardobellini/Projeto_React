@@ -20,7 +20,7 @@ const items: MenuProps['items'] = [
 ];
 
 const Header: React.FC = () => (
-  <div style={{ padding: "16px", background: "#d3dadaff", borderRadius: 20, fontFamily: 'Arial, sans-serif', marginBottom: 20, }}>
+  <div style={{ height: 72, padding: "16px", display: 'flex', alignItems: 'center', background: "#d3dadaff", borderRadius: 20, fontFamily: 'Arial, sans-serif', marginBottom: 20 }}>
     <Dropdown menu={{ items }}>
       <a onClick={(e) => e.preventDefault()}>
         <Space>
