@@ -16,54 +16,41 @@ const mesAnoFormatado = (mes: number, ano: number) => {
   return `${nomeMes.charAt(0).toUpperCase()}${nomeMes.slice(1)} ${ano}`;
 };
 
-const Calendario: React.FC = () => {
+interface CalendarioProps {
+  mesAtual: number;
+  anoAtual: number;
+  diaSelecionado: number | null;
+  aoVoltarMes: () => void;
+  aoAvancarMes: () => void;
+  aoSelecionarDia: (dia: number) => void;
+}
+
+const Calendario: React.FC<CalendarioProps> = ({
+  mesAtual,
+  anoAtual,
+  diaSelecionado,
+  aoVoltarMes,
+  aoAvancarMes,
+  aoSelecionarDia,
+}) => {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [selectedDay, setSelectedDay] = useState<number | null>(
-    today.getDate()
-  );
   const [pokemon, setPokemon] = useState<{
     name: string;
     sprite: string | null;
   } | null>(null);
   const [loadingPokemon, setLoadingPokemon] = useState(false);
   const [pokemonError, setPokemonError] = useState<string | null>(null);
-  const dias = obterDiasDoMes(currentMonth, currentYear);
-  const primeiroDia = obterPrimeiroDiaDoMes(currentMonth, currentYear);
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-    setSelectedDay(null);
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-    setSelectedDay(null);
-  };
-
-  const handleSelectDay = (day: number) => {
-    setSelectedDay(day);
-  };
+  const dias = obterDiasDoMes(mesAtual, anoAtual);
+  const primeiroDia = obterPrimeiroDiaDoMes(mesAtual, anoAtual);
 
   useEffect(() => {
-    if (selectedDay == null) return;
+    if (diaSelecionado == null) return;
     const controller = new AbortController();
     const fetchPokemon = async () => {
       try {
         setLoadingPokemon(true);
         setPokemonError(null);
-        const id = obterIdPokemon(selectedDay, currentMonth, currentYear);
+        const id = obterIdPokemon(diaSelecionado, mesAtual, anoAtual);
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
           signal: controller.signal,
         });
@@ -85,16 +72,16 @@ const Calendario: React.FC = () => {
     };
     fetchPokemon();
     return () => controller.abort();
-  }, [selectedDay, currentMonth, currentYear]);
+  }, [diaSelecionado, mesAtual, anoAtual]);
 
   return (
     <div className="calendario-container">
       <div className="calendario-header">
-        <button className="calendario-nav" onClick={handlePrevMonth}>
+        <button className="calendario-nav" onClick={aoVoltarMes}>
           {"<"}
         </button>
-        <span className="calendario-titulo">{mesAnoFormatado(currentMonth, currentYear)}</span>
-        <button className="calendario-nav" onClick={handleNextMonth}>
+        <span className="calendario-titulo">{mesAnoFormatado(mesAtual, anoAtual)}</span>
+        <button className="calendario-nav" onClick={aoAvancarMes}>
           {">"}
         </button>
       </div>
@@ -112,9 +99,9 @@ const Calendario: React.FC = () => {
         {dias.map((day) => {
           const isToday =
             day === today.getDate() &&
-            currentMonth === today.getMonth() &&
-            currentYear === today.getFullYear();
-          const isSelected = day === selectedDay;
+            mesAtual === today.getMonth() &&
+            anoAtual === today.getFullYear();
+          const isSelected = day === diaSelecionado;
 
           return (
             <div
@@ -122,7 +109,7 @@ const Calendario: React.FC = () => {
               className={`calendario-dia${isToday ? " calendario-hoje" : ""}${
                 isSelected ? " calendario-selecionado" : ""
               }`}
-              onClick={() => handleSelectDay(day)}
+              onClick={() => aoSelecionarDia(day)}
             >
               {day}
             </div>
