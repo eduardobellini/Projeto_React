@@ -1,8 +1,8 @@
 
 import './App.css'
-import AdicionarHabito from './components/AdicionarHabitos/AdicionarHabitos'
-import Calendario from './components/Calendario/Calendario'
-import MeusHabitos from './components/MeusHabitos/MeusHabitos'
+import AdicionarHabito from './pages/Home/AdicionarHabitos/AdicionarHabitos'
+import Calendario from './pages/Home/Calendario/Calendario'
+import MeusHabitos from './pages/Home/MeusHabitos/MeusHabitos'
 import React from 'react'
 
 function App() {
