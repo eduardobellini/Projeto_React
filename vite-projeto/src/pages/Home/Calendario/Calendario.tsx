@@ -1,24 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Calendario.css";
 
-const diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-const obterDiasDoMes = (mes: number, ano: number): number[] => {
-  const totalDias = new Date(ano, mes + 1, 0).getDate();
-  return Array.from({ length: totalDias }, (_, i) => i + 1);
-};
-
-const obterPrimeiroDiaDoMes = (mes: number, ano: number): number => 
-  new Date(ano, mes, 1).getDay();
-
-const obterIdPokemon = (dia: number, mes: number, ano: number) => 
-  (dia + (mes + 1) * 31 + ano) % 898 + 1;
-
-const formatarMesAno = (mes: number, ano: number) => {
-  const nomeMes = new Date(ano, mes).toLocaleDateString("pt-BR", { month: "long" });
-  return `${nomeMes.charAt(0).toUpperCase()}${nomeMes.slice(1)} ${ano}`;
-};
-
 interface CalendarioProps {
   mesAtual: number;
   anoAtual: number;
@@ -36,69 +18,43 @@ const Calendario: React.FC<CalendarioProps> = ({
   aoAvancarMes,
   aoSelecionarDia,
 }) => {
-  const hoje = new Date();
-  const [pokemon, setPokemon] = useState<{
-    nome: string;
-    imagem: string | null;
-  } | null>(null);
+  const [pokemon, setPokemon] = useState<{ nome: string; imagem: string } | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const [erroImagem, setErroImagem] = useState(false);
-  
-  const dias = obterDiasDoMes(mesAtual, anoAtual);
-  const primeiroDia = obterPrimeiroDiaDoMes(mesAtual, anoAtual);
 
-  // Usa proxy para evitar rate limiting do GitHub
-  const obterUrlComProxy = (url: string): string => {
-    if (url.includes('raw.githubusercontent.com')) {
-      return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
-    }
-    return url;
-  };
+
+  const totalDias = new Date(anoAtual, mesAtual + 1, 0).getDate();
+  
+  
+  const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
+
+  
+  const nomeMes = new Date(anoAtual, mesAtual).toLocaleDateString("pt-BR", { 
+    month: "long", year: "numeric" 
+  });
+
 
   useEffect(() => {
-    if (diaSelecionado == null) return;
-    
-    const controlador = new AbortController();
-    
-    const buscarPokemon = async () => {
+    if (!diaSelecionado) return;
+
+    const buscar = async () => {
+      setCarregando(true);
+      const id = (diaSelecionado + mesAtual * 31 + anoAtual) % 898 + 1;
+      
       try {
-        setCarregando(true);
-        setErro(null);
-        setErroImagem(false);
-        
-        const id = obterIdPokemon(diaSelecionado, mesAtual, anoAtual);
-        const resposta = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, {
-          signal: controlador.signal,
-        });
-        
-        if (!resposta.ok) throw new Error(`Erro HTTP ${resposta.status}`);
-        
-        const dados = await resposta.json();
-        const idPokemon = dados.id || id;
-        const urlImagem = dados?.sprites?.front_default || 
-          `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${idPokemon}.png`;
-        
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const dados = await res.json();
         setPokemon({
           nome: dados.name,
-          imagem: urlImagem,
+          imagem: dados.sprites.front_default
         });
-      } catch (e: unknown) {
-        if (e instanceof Error && e.name === "AbortError") {
-          return;
-        }
-        setErro("Falha ao carregar Pokémon");
+      } catch {
         setPokemon(null);
-      } finally {
-        setCarregando(false);
       }
+      setCarregando(false);
     };
-    
-    buscarPokemon();
-    return () => controlador.abort();
-  }, [diaSelecionado, mesAtual, anoAtual]);
 
-  const urlImagemComProxy = pokemon?.imagem ? obterUrlComProxy(pokemon.imagem) : null;
+    buscar();
+  }, [diaSelecionado, mesAtual, anoAtual]);
 
   return (
     <div className="calendario-container">
@@ -106,39 +62,32 @@ const Calendario: React.FC<CalendarioProps> = ({
         <button className="calendario-nav" onClick={aoVoltarMes}>
           {"<"}
         </button>
-        <span className="calendario-titulo">
-          {formatarMesAno(mesAtual, anoAtual) || `${mesAtual + 1}/${anoAtual}`}
-        </span>
+        <span className="calendario-titulo">{nomeMes}</span>
         <button className="calendario-nav" onClick={aoAvancarMes}>
           {">"}
         </button>
       </div>
-      
+
       <div className="calendario-dias-semana">
-        {diasDaSemana.map((dia) => (
-          <div key={dia} className="calendario-dia-semana">
-            {dia}
-          </div>
+        {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(d => (
+          <div key={d} className="calendario-dia-semana">{d}</div>
         ))}
       </div>
-      
-      <div className="calendario-dias">
-        {Array.from({ length: primeiroDia }).map((_, i) => (
-          <div key={`vazio-${i}`} className="calendario-dia calendario-vazio" />
-        ))}
-        {dias.map((dia) => {
-          const ehHoje =
-            dia === hoje.getDate() &&
-            mesAtual === hoje.getMonth() &&
-            anoAtual === hoje.getFullYear();
-          const estaSelecionado = dia === diaSelecionado;
 
+      <div className="calendario-dias">
+    
+        {[...Array(primeiroDia)].map((_, i) => (
+          <div key={`v${i}`} className="calendario-dia calendario-vazio" />
+        ))}
+        
+        {[...Array(totalDias)].map((_, i) => {
+          const dia = i + 1;
+          const selecionado = dia === diaSelecionado;
+          
           return (
             <div
               key={dia}
-              className={`calendario-dia${ehHoje ? " calendario-hoje" : ""}${
-                estaSelecionado ? " calendario-selecionado" : ""
-              }`}
+              className={`calendario-dia ${selecionado ? "calendario-selecionado" : ""}`}
               onClick={() => aoSelecionarDia(dia)}
             >
               {dia}
@@ -146,27 +95,18 @@ const Calendario: React.FC<CalendarioProps> = ({
           );
         })}
       </div>
-      
+
       <div className="pokemon-painel">
         {carregando && (
           <span className="pokemon-carregando">Carregando Pokémon...</span>
         )}
-        {!carregando && erro && (
-          <span className="pokemon-erro">{erro}</span>
-        )}
-        {!carregando && !erro && pokemon && (
+        {pokemon && (
           <div className="pokemon-conteudo">
-            {pokemon.imagem && !erroImagem ? (
-              <img
-                className="pokemon-img"
-                src={urlImagemComProxy || pokemon.imagem}
-                alt={pokemon.nome}
-                onError={() => setErroImagem(true)}
-                onLoad={() => setErroImagem(false)}
-              />
-            ) : (
-              <div className="pokemon-sem-imagem">Sem imagem</div>
-            )}
+            <img 
+              className="pokemon-img"
+              src={pokemon.imagem} 
+              alt={pokemon.nome} 
+            />
             <div className="pokemon-informacoes">
               <div className="pokemon-nome">{pokemon.nome}</div>
             </div>
