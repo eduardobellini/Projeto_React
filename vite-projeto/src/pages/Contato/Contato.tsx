@@ -1,27 +1,36 @@
-import "./contato.css"
+
 import { Card } from "antd";
+import 'antd/dist/reset.css';
+import "./contato.css";
 
 export default function Contato() {
-    return (
-        <div className="contato-container">
-            <h2>Quer entrar em contato?</h2>
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        padding: "20px",
+        background: "#f0f2f5",
+      }}
+    >
+      
+      <Card
+        className="contato-card"
+        title={<h2 className="card-title">Email</h2>}
+      >
+        <p className="card-text">habittracker@meuprojeto.com</p>
+      </Card>
 
-            <div className="cards-wrapper">
-
-                
-                <Card title="Email" className="contato-card">
-                    <p>habittracker@meuprojeto.com</p>
-                    
-                </Card>
-
-                <Card title="Outros Contatos" className="contato-card">
-                    <p> WhatsApp: (83) 4002-8922</p>
-                    <p> João Pessoa - PB</p>
-                </Card>
-                
-
-            </div>
-        </div>
-    );
+      <Card
+        className="contato-card"
+        title={<h2 className="card-title">Outros Contatos</h2>}
+      >
+        <p className="card-text">WhatsApp: (83) 4002-8922</p>
+        <p className="card-text">João Pessoa - PB</p>
+      </Card>
+    </div>
+  );
 }
-

@@ -5,6 +5,7 @@ import Calendario from './pages/Home/Calendario/Calendario'
 import MeusHabitos from './pages/Home/MeusHabitos/MeusHabitos'
 import React from 'react'
 
+
 function App() {
   const hoje = new Date()
   const [mesAtual, setMesAtual] = React.useState<number>(hoje.getMonth())
